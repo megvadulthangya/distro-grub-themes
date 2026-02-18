@@ -1,0 +1,1743 @@
+
+=========================================
+FILE: assets/theme.txt
+=========================================
+
+# Main options
+title-text: ""
+desktop-image: "background.png"
+desktop-color: "#000000"
+terminal-font: "Terminus Regular 14"
+terminal-box: "terminal_box_*.png"
+terminal-left: "0"
+terminal-top: "0"
+terminal-width: "100%"
+terminal-height: "100%"
+terminal-border: "0"
+
+# Boot menu
++ boot_menu {
+  left = 15%
+  top = 40%
+  width = 55%
+  height = 65%
+  item_font = "Ubuntu Regular 20"
+  item_color = "#cccccc"
+  selected_item_color = "#ffffff"
+  icon_width = 36
+  icon_height = 36
+  item_icon_space = 20
+  item_height = 40
+  item_padding = 2
+  item_spacing = 10
+  selected_item_pixmap_style = "select_*.png"
+}
+
+
+# Countdown label
+# You can change the name of default starting OS here
++ label {
+  left = 15%
+  top = 31%
+  align = "center"
+  id = "__timeout__"
+  text = "Selected OS will start in %d seconds"
+  color = "#cccccc"
+  font = "Ubuntu Regular 17"
+}
+
+=========================================
+FILE: build/default.nix
+=========================================
+
+{ stdenvNoCC, lib, theme }:
+let
+  themes = builtins.map (theme: (builtins.head (lib.strings.splitString "." theme))) (builtins.attrNames (builtins.readDir ./../assets/backgrounds));
+in
+assert builtins.any (x: x == theme) themes;
+
+stdenvNoCC.mkDerivation {
+  name = "distro-grub-themes";
+  src = ./../.;
+
+  installPhase = ''
+    mkdir -p $out
+    cp ./assets/backgrounds/${theme}.png $out/background.png
+    cp ./assets/splash_image.jpg $out/splash_image.jpg
+    cp -r ./assets/icons $out
+    cp -r ./assets/fonts/. $out
+    cp -r ./assets/menu/. $out
+    cp -r ./assets/theme.txt $out
+  '';
+
+  meta = with lib; {
+    homepage = "https://github.com/AdisonCavani/distro-grub-themes";
+    description = "A pack of GRUB2 themes for each Linux distribution";
+    license = licenses.gpl3;
+    maintainers = with maintainers; [ zakuciael ];
+    platforms = platforms.linux;
+  };
+}
+
+=========================================
+FILE: build/module.nix
+=========================================
+
+{ pkgs, lib, config, ... }:
+with lib;
+let
+  cfg = config.distro-grub-themes;
+  themes = builtins.map (theme: (builtins.head (lib.strings.splitString "." theme))) (builtins.attrNames (builtins.readDir ./../assets/backgrounds));
+in
+{
+  options.distro-grub-themes = {
+    enable = mkEnableOption "Enable Distro Grub Theme";
+    theme = mkOption {
+      type = types.enum themes;
+      default = "nixos";
+      example = "arch-linux";
+      description = ''
+        Selected theme name.
+        IMPORTANT! Theme name must be the same as in assert/backgrounds directory without the extension
+      '';
+    };
+  };
+
+  config = mkIf (cfg.enable)
+    {
+      boot.loader.grub = {
+        theme = pkgs.callPackage ./default.nix { theme = cfg.theme; };
+        splashImage = ./../assets/splash_image.jpg;
+      };
+    };
+}
+
+=========================================
+FILE: CONTRIBUTING.md
+=========================================
+
+# Contributing guide
+
+Thank you for investing your time in contributing to this project! :sparkles:. 
+
+## New contributor guide
+
+To get an overview of the project, read the [README](README.md) and [wiki page](https://github.com/AdisonCavani/distro-grub-themes/wiki).
+
+### Project structure:
+
+```
+.
+├── assets                       - assets for creating background images
+|   ├── backgrounds              - backgrounds used in each theme
+|   ├── fonts                    - fonts
+|   ├── icons                    - icons
+|   ├── menu                     - menu parts
+|   └── theme.txt                - theme configuration file
+├── docs                         - documentation markdown files
+├── preview                      - preview images for README.md
+├── themes                       - compressed themes ready to install in .tar format
+└── themes.json                  - json file containing all themes definitions (used as database for wiki page)
+```
+
+### Workflow
+
+Folders that trigger new action/workflow:
+
+- assets
+- customize
+
+Every time you create new commit on master branch, github action bot will update all files (as defined in [this file](https://github.com/AdisonCavani/distro-grub-themes/blob/master/.github/workflows/update-content.yml)).  
+You can track your workflows [here](https://github.com/AdisonCavani/distro-grub-themes/actions).
+
+### Branches
+
+```
+├── master                       - main branch containing latest changes
+├── legacy                       - obsolete C# program, replaced by Github Actions workflow
+└── templates                    - PSD, phosothop templates for background images
+```
+
+### Frequently Asked Questions
+**Q**: Where are `psd` templates located?  
+**A**: Templates are located in [`templates branch`](https://github.com/AdisonCavani/distro-grub-themes/tree/templates).
+
+**Q**: How can I edit `psd` template? I don't have Photoshop  
+**A**: You can import `psd` into GIMP, however this might cause to lose some Photoshop related data. I recommend to use [Photopea](https://www.photopea.com/) - free web-based Photoshop alternative.
+
+=========================================
+FILE: docs/Contributing.mdx
+=========================================
+
+# Contributing guide
+
+Thank you for investing your time in contributing to this project! :sparkles:. 
+
+## New contributor guide
+
+To get an overview of the project, read the [README](README.md) and [wiki page](https://github.com/AdisonCavani/distro-grub-themes/wiki).
+
+### Project structure:
+
+```
+.
+├── assets                       - assets for creating background images
+|   ├── backgrounds              - backgrounds used in each theme
+|   ├── fonts                    - fonts
+|   ├── icons                    - icons
+|   ├── menu                     - menu parts
+|   └── theme.txt                - theme configuration file
+├── docs                         - documentation markdown files
+├── preview                      - preview images for README.md
+├── themes                       - compressed themes ready to install in .tar format
+└── themes.json                  - json file containing all themes definitions (used as database for wiki page)
+```
+
+### Workflow
+
+Folders that trigger new action/workflow:
+
+- assets
+- customize
+
+Every time you create new commit on master branch, github action bot will update all files (as defined in [this file](https://github.com/AdisonCavani/distro-grub-themes/blob/master/.github/workflows/update-content.yml)).  
+You can track your workflows [here](https://github.com/AdisonCavani/distro-grub-themes/actions).
+
+### Branches
+
+```
+├── master                       - main branch containing latest changes
+├── legacy                       - obsolete C# program, replaced by Github Actions workflow
+└── templates                    - PSD, phosothop templates for background images
+```
+
+### Frequently Asked Questions
+**Q**: Where are `psd` templates located?  
+**A**: Templates are located in [`templates branch`](https://github.com/AdisonCavani/distro-grub-themes/tree/templates).
+
+**Q**: How can I edit `psd` template? I don't have Photoshop  
+**A**: You can import `psd` into GIMP, however this might cause to lose some Photoshop related data. I recommend to use [Photopea](https://www.photopea.com/) - free web-based Photoshop alternative.
+
+<JsonLd content={{
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: [
+      {
+        "@type": "Question",
+        name: "Where are psd templates located?",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "Templates are located in &lt;a href=&apos;https://github.com/AdisonCavani/distro-grub-themes/tree/templates&apos;&gt;templates branch&lt;/a&gt;.",
+        },
+      },
+      {
+        "@type": "Question",
+        name: "How can I edit psd template? I don&apos;t have Photoshop.",
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: "You can import psd into GIMP, however this might cause to lose some Photoshop related data. I recommend to use &lt;a href=&apos;https://www.photopea.com/&apos;&gt;Photopea&lt;/a&gt; - free web-based Photoshop alternative.",
+        },
+      },
+    ],
+    }}/>
+
+=========================================
+FILE: docs/Index.mdx
+=========================================
+
+Welcome to **distro-grub-themes** - the open-source GRUB2 themes.
+
+A pack of GRUB2 themes for different Linux distributions and OSs.  
+It aims to replace the default GRUB look, with a nice and a colorful theme.
+
+## Help
+
+### Questions or need help?
+If you need help, you can [open new issue](https://github.com/AdisonCavani/distro-grub-themes/issues).  
+Before opening a new one, please **use search feature** to avoid duplicates.
+
+### Documentation feedback
+Please leave you feedback about documentation [here](https://github.com/AdisonCavani/distro-grub-themes/issues/96).
+
+## Funding
+I put a lot of effort and my free time into maintaining this project.  
+If you appreciate that, you can buy me a coffee.
+
+[<Image src="/static/images/buy-me-a-coffee.svg" alt="Buy Me A Coffee" width={260} height={73} />](https://www.buymeacoffee.com/adisoncavani)
+
+## Contributing
+
+Development happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements.  
+Read below to learn how you can take part in improving it.
+
+### Code of Conduct
+
+This project has adopted a Code of Conduct that we expect project participants to adhere to.  
+Please read [the full text](https://github.com/AdisonCavani/distro-grub-themes/blob/master/.github/CODE_OF_CONDUCT.md) so that you can understand what actions will and will not be tolerated.
+
+### Contributing Guide
+
+Read [contributing guide](https://github.com/AdisonCavani/distro-grub-themes/blob/master/CONTRIBUTING.md) to learn how to propose changes, bugfixes and improvements.
+
+### License
+This project is licensed under [GNU General Public License v3.0](https://github.com/AdisonCavani/distro-grub-themes/blob/master/LICENSE)
+
+### Contributors
+
+Thank you to all the people who already contributed to this project!
+
+[<img src="https://contrib.rocks/image?repo=AdisonCavani/distro-grub-themes" alt="Project contributors" loading="lazy" />](https://github.com/AdisonCavani/distro-grub-themes/graphs/contributors)
+
+=========================================
+FILE: docs/Installation.mdx
+=========================================
+
+## Installation via GRUB Customizer
+
+In order to clone the repository from GitHub, you have to install Git, via the `git` package.  
+Alternatively, you can download a zip archive by clicking on **Code** then **Download ZIP**
+
+#### Clone the repository
+
+You can clone the repository or go to the [release page](https://github.com/AdisonCavani/distro-grub-themes/releases) and download a single theme.
+
+```shell
+git clone https://github.com/AdisonCavani/distro-grub-themes.git
+```
+
+### Install GRUB Customizer
+
+<Callout type="warning">
+  ``grub-customizer`` is not available on Ubuntu 21.10 and above.  
+  See [#56](https://github.com/AdisonCavani/distro-grub-themes/issues/56).  
+  You should [install it manually](#manual-installation), instead.
+</Callout>
+
+apt
+
+```shell
+sudo add-apt-repository ppa:danielrichter2007/grub-customizer
+sudo apt-get update
+sudo apt-get install grub-customizer
+```
+
+pacman
+
+```shell
+sudo pacman -S grub-customizer
+```
+
+<Callout type="warning">
+  Grub Customizer DOES NOT WORK on recent Fedora releases without extensive modification.  
+  [Manually installing](#manual-installation) a GRUB theme is much more secure and hassle free.  
+  Use this at your own risk.
+</Callout>
+
+dnf
+
+```shell
+sudo dnf install grub-customizer
+```
+
+eopkg
+
+```shell
+sudo eopkg install grub-customizer
+```
+
+### Install a pre-made theme with GRUB Customizer
+
+- Open GRUB Customizer
+- Click on the **Appearance settings** tab
+- Select _Custom resolution_ and select or type in your resolution, e.g 1920x1080
+- Press the _Add theme_ button, then navigate to the directory where you cloned the repository; in my case `/home/adison/distro-grub-themes`
+- Select your theme located in the `/themes` directory
+- Save the changes
+
+### Install a custom-made theme with GRUB Customizer
+
+- Extract and edit your theme located in the `/themes` folder
+- With your file manager, inside the modified theme's directory, select all files and create an archive with .tar or .tar.xz format
+- Open GRUB Customizer
+- Click on the **Appearance settings** tab
+- Enable _Custom resolution_ and select or type in your resolution, e.g 1920x1080
+- Press the _Add theme_ button, then navigate to the directory where you cloned the repository; in my case `/home/adison/distro-grub-themes`
+- Change the _Archive files_ setting to **All files**
+- Select your archive
+- Save the changes
+
+<Callout>
+  KDE Neon's default theme is set in a separate file that overrides any theme changes you make.  
+  Run the following to disable the default GRUB theme:
+  
+  ```shell
+  sudo rm /etc/default/grub.d/99_breeze-grub.cfg
+  sudo update-grub
+  ```
+  
+  To revert back to the orignal KDE Neon theme, open GRUB Customizer, and in the Appearance settings tab, change the theme dropdown back to breeze.
+</Callout>
+
+## Installation via Nix Flakes
+### Prerequisites
+- Nix 2.4 or later
+- Experimental features `nix-command` and `flakes` enabled.
+  - You can achive that by setting the following options and rebuilding your system.
+
+    ```nix:configuration.nix
+    nix = {
+      package = pkgs.nixFlakes;
+      extraOptions = ''
+        experimental-features = nix-command flakes
+      '';
+    };
+    ```
+
+### NixOS module
+To use this theme as a NixOS module, a bare-minimum configuration would be as follows:
+```nix:flake.nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    distro-grub-themes.url = "github:AdisonCavani/distro-grub-themes";
+  };
+  outputs = { self, nixpkgs, ... }@inputs: {
+    nixosConfigurations."default" = nixpkgs.lib.nixosSystem rec {
+      system = "x86_64-linux";
+      modules = [
+        ./configuration.nix
+        inputs.distro-grub-themes.nixosModules.${system}.default
+      ];
+    };
+  };
+}
+```
+
+```nix:configuration.nix 
+{ config, pkgs, lib, ... }: {
+  distro-grub-themes = {
+    enable = true;
+    theme = "<theme_name>";
+  };
+}
+```
+
+### Standalone setup
+To use this theme in a standalone setup, a bare-minimum configuration would be as follows:
+```nix:flake.nix
+{
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    distro-grub-themes.url = "github:AdisonCavani/distro-grub-themes";
+  };
+  outputs = { self, nixpkgs, ... }@inputs: {
+    nixosConfigurations."default" = nixpkgs.lib.nixosSystem rec {
+      system = "x86_64-linux";
+
+      specialArgs = {
+        # Pass system and inputs to the configuration.nix file
+        inherit system inputs;
+      };
+
+      modules = [
+        ./configuration.nix
+      ];
+    };
+  };
+}
+```
+```nix:configuration.nix
+{ config, pkgs, lib, inputs, system, ... }: {
+  
+  boot.loader.grub = rec {
+    theme = inputs.distro-grub-themes.packages.${system}.<theme_name>-grub-theme;
+    splashImage = "${theme}/splash_image.jpg";
+  };
+}
+```
+
+## Manual Installation
+
+In order to clone the repository from GitHub, you have to install Git, via the `git` package.  
+Alternatively, you can download a zip archive by clicking on **Code** then **Download ZIP**.
+
+#### Clone the repository
+
+You can clone the repository, or go to the [release page](https://github.com/AdisonCavani/distro-grub-themes/releases) and download a single theme.
+
+```shell
+git clone https://github.com/AdisonCavani/distro-grub-themes.git
+```
+
+#### Create themes directory
+To create themes directory, replace `BOOT_GRUB_LOCATION` with the directory where GRUB is located.  
+Usually it's `/boot/grub` or `/boot/grub2` but some distributions have a different one, so you'll have to figure it out.
+
+```shell
+sudo mkdir BOOT_GRUB_LOCATION/themes
+```
+
+#### Edit or use a pre-made theme
+
+```shell
+cd distro-grub-themes/themes
+```
+
+#### Copy theme
+
+The theme must be unpacked inside a folder before you can install it.
+
+```
+sudo tar -C BOOT_GRUB_LOCATION/themes/<theme_name> -xf <theme_name>.tar
+```
+
+#### Edit GRUB config
+
+You can use your favourite text editor for this. Here, we use nano.
+
+```shell
+sudo nano /etc/default/grub
+```
+
+Uncomment this line and set your display resolution:
+
+```
+GRUB_GFXMODE=1920x1080
+```
+
+Make sure ``GRUB_TERMINAL_OUTPUT="console"`` is commented out!
+
+At the end of the file, add the path of your theme:
+
+```
+GRUB_THEME="BOOT_GRUB_LOCATION/themes/<theme_name>/theme.txt"
+```
+
+Ctrl+O to save, Ctrl+X to exit.
+
+#### Update Grub config
+
+You'll need to tell GRUB to update its configuration in order to include the new theme.
+
+##### Ubuntu and Debian-based systems:
+
+```shell
+sudo update-grub
+```
+
+##### Fedora, Arch & others: 
+
+
+If you have a UEFI system, run:
+
+```
+sudo grub-mkconfig -o BOOT_GRUB_LOCATION/grub.cfg
+```
+or
+```
+sudo grub2-mkconfig -o BOOT_GRUB_LOCATION/grub.cfg
+```
+
+<Callout type="warning">
+  These commands have only been tested on Arch & Fedora, and may not work on your distribution. Consult your distro's documentation and/or forum for the GRUB config file directory and its update commands.
+ 
+</Callout>
+
+<Callout>
+  KDE Neon's default theme is set in a separate file that overrides any theme changes you make.  
+  Run the following to disable the default GRUB theme:
+  
+  ```shell
+  sudo rm /etc/default/grub.d/99_breeze-grub.cfg
+  sudo update-grub
+  ```
+  
+  To revert back to the orignal KDE Neon theme, set the `GRUB_THEME` value in `/etc/default/grub` to `/boot/grub/themes/breeze/theme.txt`.
+</Callout>
+
+## Install theme in Ventoy
+
+Extract `Ventoy.tar` to `/ventoy/theme`
+
+Locate `ventoy.json` file in `/plugin/ventoy/` directory and change:
+
+```
+"file": "/ventoy/theme/blur/theme.txt",
+```
+
+to
+
+```
+"file": "/ventoy/theme/Ventoy/theme.txt",
+```
+
+For more information, head over to the [Ventoy website](https://www.ventoy.net/en/plugin_theme.html).
+
+=========================================
+FILE: flake.lock
+=========================================
+
+{
+  "nodes": {
+    "flake-utils": {
+      "inputs": {
+        "systems": "systems"
+      },
+      "locked": {
+        "lastModified": 1731533236,
+        "narHash": "sha256-l0KFg5HjrsfsO/JpG+r7fRrqm12kzFHyUHqHCVpMMbI=",
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "rev": "11707dc2f618dd54ca8739b309ec4fc024de578b",
+        "type": "github"
+      },
+      "original": {
+        "owner": "numtide",
+        "repo": "flake-utils",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1731676054,
+        "narHash": "sha256-OZiZ3m8SCMfh3B6bfGC/Bm4x3qc1m2SVEAlkV6iY7Yg=",
+        "owner": "nixos",
+        "repo": "nixpkgs",
+        "rev": "5e4fbfb6b3de1aa2872b76d49fafc942626e2add",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nixos",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "flake-utils": "flake-utils",
+        "nixpkgs": "nixpkgs"
+      }
+    },
+    "systems": {
+      "locked": {
+        "lastModified": 1681028828,
+        "narHash": "sha256-Vy1rq5AaRuLzOxct8nz4T6wlgyUR7zLU309k9mBC768=",
+        "owner": "nix-systems",
+        "repo": "default",
+        "rev": "da67096a3b9bf56a91d16901293e51ba5b49a27e",
+        "type": "github"
+      },
+      "original": {
+        "owner": "nix-systems",
+        "repo": "default",
+        "type": "github"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
+
+=========================================
+FILE: flake.nix
+=========================================
+
+{
+  description = "A pack of GRUB2 themes for each Linux distribution";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs?ref=nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
+  };
+
+  outputs =
+    { self, nixpkgs, flake-utils }:
+    let
+      systems = [ "aarch64-linux" "i686-linux" "x86_64-linux" ];
+    in
+    flake-utils.lib.eachSystem systems (
+      system:
+      let
+        pkgs = import nixpkgs { inherit system; };
+        themeNames = builtins.attrNames (builtins.readDir ./assets/backgrounds);
+        themePackages = builtins.listToAttrs (builtins.map
+          (theme:
+            let name = (builtins.head (pkgs.lib.strings.splitString "." theme)); in {
+              name = name + "-grub-theme";
+              value = pkgs.callPackage ./build/default.nix { theme = name; };
+            })
+          themeNames);
+      in
+      {
+        packages = {
+          default = pkgs.callPackage ./build/default.nix { theme = "nixos"; };
+        } // themePackages;
+
+        devShells.default = pkgs.mkShell {
+          nativeBuildInputs = with pkgs; [ nixd nixpkgs-fmt act jq ];
+        };
+
+        nixosModules.default = ./build/module.nix;
+      }
+    );
+}
+ 
+=========================================
+FILE: .gitattributes
+=========================================
+
+# Auto detect text files and perform LF normalization
+* text=auto
+
+=========================================
+FILE: .github/CODE_OF_CONDUCT.md
+=========================================
+
+# Contributor Covenant Code of Conduct
+
+## Our Pledge
+
+We as members, contributors, and leaders pledge to make participation in our
+community a harassment-free experience for everyone, regardless of age, body
+size, visible or invisible disability, ethnicity, sex characteristics, gender
+identity and expression, level of experience, education, socio-economic status,
+nationality, personal appearance, race, religion, or sexual identity
+and orientation.
+
+We pledge to act and interact in ways that contribute to an open, welcoming,
+diverse, inclusive, and healthy community.
+
+## Our Standards
+
+Examples of behavior that contributes to a positive environment for our
+community include:
+
+* Demonstrating empathy and kindness toward other people
+* Being respectful of differing opinions, viewpoints, and experiences
+* Giving and gracefully accepting constructive feedback
+* Accepting responsibility and apologizing to those affected by our mistakes,
+  and learning from the experience
+* Focusing on what is best not just for us as individuals, but for the
+  overall community
+
+Examples of unacceptable behavior include:
+
+* The use of sexualized language or imagery, and sexual attention or
+  advances of any kind
+* Trolling, insulting or derogatory comments, and personal or political attacks
+* Public or private harassment
+* Publishing others' private information, such as a physical or email
+  address, without their explicit permission
+* Other conduct which could reasonably be considered inappropriate in a
+  professional setting
+
+## Enforcement Responsibilities
+
+Community leaders are responsible for clarifying and enforcing our standards of
+acceptable behavior and will take appropriate and fair corrective action in
+response to any behavior that they deem inappropriate, threatening, offensive,
+or harmful.
+
+Community leaders have the right and responsibility to remove, edit, or reject
+comments, commits, code, wiki edits, issues, and other contributions that are
+not aligned to this Code of Conduct, and will communicate reasons for moderation
+decisions when appropriate.
+
+## Scope
+
+This Code of Conduct applies within all community spaces, and also applies when
+an individual is officially representing the community in public spaces.
+Examples of representing our community include using an official e-mail address,
+posting via an official social media account, or acting as an appointed
+representative at an online or offline event.
+
+## Enforcement
+
+Instances of abusive, harassing, or otherwise unacceptable behavior may be
+reported to the community leaders responsible for enforcement at
+adriansrodon@tuta.io.
+All complaints will be reviewed and investigated promptly and fairly.
+
+All community leaders are obligated to respect the privacy and security of the
+reporter of any incident.
+
+## Enforcement Guidelines
+
+Community leaders will follow these Community Impact Guidelines in determining
+the consequences for any action they deem in violation of this Code of Conduct:
+
+### 1. Correction
+
+**Community Impact**: Use of inappropriate language or other behavior deemed
+unprofessional or unwelcome in the community.
+
+**Consequence**: A private, written warning from community leaders, providing
+clarity around the nature of the violation and an explanation of why the
+behavior was inappropriate. A public apology may be requested.
+
+### 2. Warning
+
+**Community Impact**: A violation through a single incident or series
+of actions.
+
+**Consequence**: A warning with consequences for continued behavior. No
+interaction with the people involved, including unsolicited interaction with
+those enforcing the Code of Conduct, for a specified period of time. This
+includes avoiding interactions in community spaces as well as external channels
+like social media. Violating these terms may lead to a temporary or
+permanent ban.
+
+### 3. Temporary Ban
+
+**Community Impact**: A serious violation of community standards, including
+sustained inappropriate behavior.
+
+**Consequence**: A temporary ban from any sort of interaction or public
+communication with the community for a specified period of time. No public or
+private interaction with the people involved, including unsolicited interaction
+with those enforcing the Code of Conduct, is allowed during this period.
+Violating these terms may lead to a permanent ban.
+
+### 4. Permanent Ban
+
+**Community Impact**: Demonstrating a pattern of violation of community
+standards, including sustained inappropriate behavior,  harassment of an
+individual, or aggression toward or disparagement of classes of individuals.
+
+**Consequence**: A permanent ban from any sort of public interaction within
+the community.
+
+## Attribution
+
+This Code of Conduct is adapted from the [Contributor Covenant][homepage],
+version 2.0, available at
+https://www.contributor-covenant.org/version/2/0/code_of_conduct.html.
+
+Community Impact Guidelines were inspired by [Mozilla's code of conduct
+enforcement ladder](https://github.com/mozilla/diversity).
+
+[homepage]: https://www.contributor-covenant.org
+
+For answers to common questions about this code of conduct, see the FAQ at
+https://www.contributor-covenant.org/faq. Translations are available at
+https://www.contributor-covenant.org/translations.
+
+=========================================
+FILE: .github/FUNDING.yml
+=========================================
+
+# These are supported funding model platforms
+
+github: [AdisonCavani] # Replace with up to 4 GitHub Sponsors-enabled usernames e.g., [user1, user2]
+custom: ["https://www.buymeacoffee.com/adisoncavani"]# Replace with up to 4 custom sponsorship URLs e.g., ['link1', 'link2']
+
+=========================================
+FILE: .github/ISSUE_TEMPLATE/bug_report.yml
+=========================================
+
+name: Issue / bug
+description: File a bug/issue
+title: "bug: <title>"
+labels: [bug]
+body:
+- type: checkboxes
+  attributes:
+    label: Is there an existing issue for this?
+    description: Please search to see if an issue already exists for the bug you encountered.
+    options:
+    - label: I have searched the existing issues
+      required: true
+- type: textarea
+  attributes:
+    label: Current Behavior
+    description: A concise description of what you're experiencing.
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Expected Behavior
+    description: A concise description of what you expected to happen.
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Environment
+    description: |
+      examples:
+        - **OS**: Ubuntu 20.04
+        - **Resolution**: 1920x1080
+    value: |
+        - OS: 
+        - Resolution: 
+    render: markdown
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Anything else?
+    description: |
+      Links? References? Anything that will give us more context about the issue you are encountering!
+
+      Tip: You can attach screenshots or log files by clicking this area to highlight it and then dragging files in.
+  validations:
+    required: false
+
+=========================================
+FILE: .github/ISSUE_TEMPLATE/feature_request.yml
+=========================================
+
+name: Feature request
+description: Suggest an idea for this project
+title: "feat: <title>"
+labels: [feature-request]
+body:
+- type: textarea
+  attributes:
+    label: Is your feature request related to a problem? Please describe
+    description: A clear and concise description of what the problem is. Ex. I'm always frustrated when [...]
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Describe the solution you'd like
+    description: A clear and concise description of what you want to happen
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Describe alternatives you've considered
+    description: A clear and concise description of any alternative solutions or features you've considered
+  validations:
+    required: false
+- type: textarea
+  attributes:
+    label: Additional context
+    description: Add any other context or screenshots about the feature request here
+  validations:
+    required: false
+- type: dropdown
+  attributes:
+    label: Contributing
+    multiple: false
+    options:
+      - "No, I am afraid I cannot help regarding this"
+      - "Yes, I am willing to help implement this feature in a PR"
+  validations:
+    required: true
+- type: markdown
+  attributes:
+    value: |
+      It takes a lot of work and time maintaining this project; any contribution is welcomed
+
+=========================================
+FILE: .github/PULL_REQUEST_TEMPLATE.md
+=========================================
+
+# Description
+
+Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context.
+
+Fixes # (issue)
+
+## Type of change
+
+Please delete options that are not relevant.
+
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
+- [ ] This change requires a documentation update
+
+# Checklist:
+
+- [ ] My code follows the style guidelines of this project (correct file and folder structure)
+- [ ] The background image for theme follows naming convention: `theme_name.png`
+- [ ] I updated [`themes.json`](https://github.com/AdisonCavani/distro-grub-themes/blob/master/themes.json) file (JSON database)
+
+=========================================
+FILE: .github/workflows/nix.yml
+=========================================
+
+name: Check nix packages
+on:
+    pull_request:
+      paths:
+        - "./*.nix"
+        - ".github/workflows/nix.yml"
+        - "assets/**"
+        - "customize/**"
+    push:
+        branches: [master]
+        paths:
+          - "./*.nix"
+          - ".github/workflows/nix.yml"
+          - "assets/**"
+          - "customize/**"
+jobs:
+    flake:
+        name: Check flake
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - name: Check Nix flake inputs
+              uses: DeterminateSystems/flake-checker-action@v5
+              with:
+                send-statistics: false
+                fail-mode: true
+            - name: Install Nix
+              uses: DeterminateSystems/nix-installer-action@v9
+            - name: Check repository
+              run: nix flake check
+    matrix:
+        name: Generate build matrix
+        runs-on: ubuntu-latest
+        outputs:
+            themes: ${{ steps.generate-matrix.outputs.themes }}
+        steps:
+            - uses: actions/checkout@v4
+            - name: Generate matrix
+              id: generate-matrix
+              run: |
+                THEMES=$(ls assets/backgrounds/ | sed 's/\.png$//g' | jq --raw-input | jq --slurp -c)
+                echo "themes=$THEMES" >> $GITHUB_OUTPUT
+    build:
+        name: Check nix build for theme ${{ matrix.theme }}
+        runs-on: ubuntu-latest
+        needs:
+            - matrix
+        strategy:
+            matrix: 
+                theme: ${{ fromJSON(needs.matrix.outputs.themes) }}
+        steps:
+            - uses: actions/checkout@v4
+            - name: Install Nix
+              uses: DeterminateSystems/nix-installer-action@v9
+            - name: Build package
+              run: nix build .#${{ matrix.theme }}-grub-theme
+
+
+=========================================
+FILE: .github/workflows/update-content.yml
+=========================================
+
+name: Update changes on commit
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - "assets/**"
+      - "customize/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@master
+      - name: 📂 Create temp folder
+        run: |
+          mkdir temp
+      - name: 🖼️ Add backgrounds
+        run: |
+          for file in assets/backgrounds/*.png ; do
+            filename=$(basename "$file" .png)
+            mkdir "temp/$filename"
+            cp "$file" "temp/$filename/background.png"
+          done
+      - name: 🎨 Add icons
+        run: |
+          for dest in temp/* ; do cp -rv assets/icons "$dest"; done
+      - name: 📇 Add fonts
+        run: |
+          for dest in temp/* ; do cp -rva assets/fonts/. "$dest"; done
+      - name: 🌿 Add menu
+        run: |
+          for dest in temp/* ; do cp -rva assets/menu/. "$dest"; done
+      - name: 📃 Add theme
+        run: |
+          for dest in temp/* ; do cp -rv assets/theme.txt "$dest"; done
+      - name: 🗑️ Cleanup old themes
+        run: |
+          rm -rf themes/*
+      - name: 💼 Create archives
+        run: |
+          cd temp;
+          for dest in * ; do find "$dest" -printf "%P\n" | tar -vcf ../themes/"$dest".tar --no-recursion -C "$dest" -T -; done
+      - name: Remove artifacts
+        run: |
+          rm -r temp
+      - name: 🔥 Commit changes
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git fetch
+          git add .
+          git commit -m "🤖 Update files"
+          git push
+
+=========================================
+FILE: .gitignore
+=========================================
+
+.envrc
+.direnv
+.vscode
+result
+=========================================
+FILE: README.md
+=========================================
+
+# Distro Grub Themes
+
+[![name](https://img.shields.io/github/license/AdisonCavani/distro-grub-themes)](https://github.com/AdisonCavani/distro-grub-themes/blob/master/LICENSE)
+[![name](https://img.shields.io/github/v/release/AdisonCavani/distro-grub-themes)](https://github.com/AdisonCavani/distro-grub-themes/releases)
+[![Build](https://github.com/AdisonCavani/distro-grub-themes/actions/workflows/update-content.yml/badge.svg?event=push)](https://github.com/AdisonCavani/distro-grub-themes/actions/workflows/update-content.yml)
+<br>
+
+A pack of GRUB2 themes for different Linux distributions and OSs.<br>
+It aims to replace the default GRUB look, with a nice and colorful theme.
+
+## Get started
+
+- **Theme preview** is available at [k1ng.dev/distro-grub-themes/preview](https://k1ng.dev/distro-grub-themes/preview).  
+- **Documentation** is available at [k1ng.dev/distro-grub-themes](https://k1ng.dev/distro-grub-themes).  
+- Raw markdown files are located in [`/docs`](./docs) folder.
+
+## Funding
+I put a lot of effort and my free time into maintaining this project.  
+If you appreciate that, you can buy me a coffee.
+
+[<img src="https://www.buymeacoffee.com/assets/img/guidelines/download-assets-sm-1.svg" alt="Buy Me A Coffee" height="50px" />](https://www.buymeacoffee.com/adisoncavani)
+
+## Contributing
+
+Development happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements.  
+Read below to learn how you can take part in improving it.
+
+### Code of Conduct
+
+This project has adopted a Code of Conduct that we expect project participants to adhere to.  
+Please read [the full text](https://github.com/AdisonCavani/distro-grub-themes/blob/master/.github/CODE_OF_CONDUCT.md) so that you can understand what actions will and will not be tolerated.
+
+### Contributing Guide
+
+Read [contributing guide](https://github.com/AdisonCavani/distro-grub-themes/blob/master/CONTRIBUTING.md) to learn how to propose changes, bugfixes and improvements.
+
+### License
+This project is licensed under [GNU General Public License v3.0](https://github.com/AdisonCavani/distro-grub-themes/blob/master/LICENSE)
+
+### Contributors
+
+Thank you to all the people who already contributed to this project!
+
+<a href="https://github.com/AdisonCavani/distro-grub-themes/graphs/contributors">
+  <img src="https://contrib.rocks/image?repo=AdisonCavani/distro-grub-themes" />
+</a>
+
+=========================================
+FILE: themes.json
+=========================================
+
+{
+  "distros": [
+    {
+      "name": "Arch Linux"
+    },
+    {
+      "name": "Arco Linux"
+    },
+    {
+      "name": "Artix Linux"
+    },
+    {
+      "name": "Bedrock Linux"
+    },
+    {
+      "name": "Debian"
+    },
+    {
+      "name": "Deepin"
+    },
+    {
+      "name": "ElementaryOS"
+    },
+    {
+      "name": "EndeavourOS"
+    },
+    {
+      "name": "Fedora"
+    },
+    {
+      "name": "FreeBSD"
+    },
+    {
+      "name": "Garuda"
+    },
+    {
+      "name": "Gentoo"
+    },
+    {
+      "name": "KDE Neon"
+    },
+    {
+      "name": "Kubuntu"
+    },
+    {
+      "name": "Linux Mint"
+    },
+    {
+      "name": "Manjaro"
+    },
+    {
+      "name": "MX Linux"
+    },
+    {
+      "name": "openSUSE"
+    },
+    {
+      "name": "Pop!_OS"
+    },
+    {
+      "name": "Rocky Linux"
+    },
+    {
+      "name": "Slackware"
+    },
+    {
+      "name": "Solus"
+    },
+    {
+      "name": "Ubuntu"
+    },
+    {
+      "name": "Ubuntu Mate"
+    },
+    {
+      "name": "Ventoy"
+    },
+    {
+      "name": "Void Linux"
+    },
+    {
+      "name": "Windows 10"
+    },
+    {
+      "name": "Windows 11"
+    },
+    {
+      "name": "Xero Linux"
+    },
+    {
+      "name": "Zorin OS"
+    },
+    {
+      "name": "NixOS",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "Lubuntu",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "ChromeOS",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "Ultramarine",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "AlmaLinux",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "Parabola",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "Archcraft",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "Nobara",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "Proxmox",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "Linux Lite",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "Vanilla OS",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "CentOS",
+      "versionAdded": "v3.3"
+    }
+  ],
+  "vendors": [
+    {
+      "name": "Acer"
+    },
+    {
+      "name": "Aorus"
+    },
+    {
+      "name": "Apple"
+    },
+    {
+      "name": "Asus"
+    },
+    {
+      "name": "ASRock"
+    },
+    {
+      "name": "Dell"
+    },
+    {
+      "name": "Framework"
+    },
+    {
+      "name": "Framework 13"
+    },
+    {
+      "name": "Gigabyte"
+    },
+    {
+      "name": "HP"
+    },
+    {
+      "name": "Huawei"
+    },
+    {
+      "name": "Kingston"
+    },
+    {
+      "name": "Legion"
+    },
+    {
+      "name": "Lenovo"
+    },
+    {
+      "name": "MSI"
+    },
+    {
+      "name": "Razer"
+    },
+    {
+      "name": "System76"
+    },
+    {
+      "name": "Toshiba"
+    },
+    {
+      "name": "Vaio"
+    },
+    {
+      "name": "Thinkpad",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "Samsung",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "LG",
+      "versionAdded": "v3.1"
+    },
+    {
+      "name": "Asus ROG",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "Asus TUF",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "HP Victus",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "Medion",
+      "versionAdded": "v3.2"
+    },
+    {
+      "name": "Supermicro",
+      "versionAdded": "v3.3"
+    },
+    {
+      "name": "Fujitsu",
+      "versionAdded": "v3.3"
+    },
+    {
+      "name": "HP Omen",
+      "versionAdded": "v3.3"
+    }
+  ]
+}
+=========================================
+FILE: tree.md
+=========================================
+
+[~/github/distro-grub-themes]
+   lt
+ .
+├──  .github
+│   ├──  ISSUE_TEMPLATE
+│   │   ├──  bug_report.yml
+│   │   └──  feature_request.yml
+│   ├──  workflows
+│   │   ├──  nix.yml
+│   │   └──  update-content.yml
+│   ├──  CODE_OF_CONDUCT.md
+│   ├──  FUNDING.yml
+│   └──  PULL_REQUEST_TEMPLATE.md
+├──  assets
+│   ├──  backgrounds
+│   │   ├──  acer.png
+│   │   ├──  almalinux.png
+│   │   ├──  aorus.png
+│   │   ├──  apple.png
+│   │   ├──  arch-linux.png
+│   │   ├──  archcraft.png
+│   │   ├──  arco-linux.png
+│   │   ├──  artix-linux.png
+│   │   ├──  asrock.png
+│   │   ├──  asus-rog.png
+│   │   ├──  asus-tuf.png
+│   │   ├──  asus.png
+│   │   ├──  bedrock-linux.png
+│   │   ├──  centos.png
+│   │   ├──  chromeos.png
+│   │   ├──  debian.png
+│   │   ├──  deepin.png
+│   │   ├──  dell.png
+│   │   ├──  elementaryos.png
+│   │   ├──  endeavouros.png
+│   │   ├──  fedora.png
+│   │   ├──  framework.png
+│   │   ├──  framework13.png
+│   │   ├──  freebsd.png
+│   │   ├──  fujitsu.png
+│   │   ├──  garuda.png
+│   │   ├──  gentoo.png
+│   │   ├──  gigabyte.png
+│   │   ├──  hp-omen.png
+│   │   ├──  hp-victus.png
+│   │   ├──  hp.png
+│   │   ├──  huawei.png
+│   │   ├──  kde-neon.png
+│   │   ├──  kingston.png
+│   │   ├──  kubuntu.png
+│   │   ├──  legion.png
+│   │   ├──  lenovo.png
+│   │   ├──  lg.png
+│   │   ├──  linux-lite.png
+│   │   ├──  linux-mint.png
+│   │   ├──  lubuntu.png
+│   │   ├──  manjaro.png
+│   │   ├──  medion.png
+│   │   ├──  msi.png
+│   │   ├──  mx-linux.png
+│   │   ├──  nixos.png
+│   │   ├──  nobara.png
+│   │   ├──  opensuse.png
+│   │   ├──  parabola.png
+│   │   ├──  pop-os.png
+│   │   ├──  proxmox.png
+│   │   ├──  razer.png
+│   │   ├──  rocky-linux.png
+│   │   ├──  samsung.png
+│   │   ├──  slackware.png
+│   │   ├──  solus.png
+│   │   ├──  supermicro.png
+│   │   ├──  system76.png
+│   │   ├──  thinkpad.png
+│   │   ├──  toshiba.png
+│   │   ├──  ubuntu-mate.png
+│   │   ├──  ubuntu.png
+│   │   ├──  ultramarine.png
+│   │   ├──  vaio.png
+│   │   ├──  vanilla-os.png
+│   │   ├──  ventoy.png
+│   │   ├──  void-linux.png
+│   │   ├──  windows-10.png
+│   │   ├──  windows-11.png
+│   │   ├──  xero-linux.png
+│   │   └──  zorin-os.png
+│   ├──  fonts
+│   │   ├──  terminus-12.pf2
+│   │   ├──  terminus-14.pf2
+│   │   ├──  terminus-16.pf2
+│   │   ├──  terminus-18.pf2
+│   │   ├──  ubuntu_regular_17.pf2
+│   │   └──  ubuntu_regular_20.pf2
+│   ├──  icons
+│   │   ├──  4MLinux.png
+│   │   ├──  alma.png
+│   │   ├──  AlpineLinux.png
+│   │   ├──  android.png
+│   │   ├──  anonymous.png
+│   │   ├──  antergos.png
+│   │   ├──  arch.png
+│   │   ├──  archcraft.png
+│   │   ├──  archlinux.png
+│   │   ├──  arcolinux.png
+│   │   ├──  artix.png
+│   │   ├──  bedrock.png
+│   │   ├──  cancel.png
+│   │   ├──  centos.png
+│   │   ├──  chakra.png
+│   │   ├──  chromeos.png
+│   │   ├──  debian.png
+│   │   ├──  deepin.png
+│   │   ├──  devuan.png
+│   │   ├──  driver.png
+│   │   ├──  edit.png
+│   │   ├──  efi.png
+│   │   ├──  elementary.png
+│   │   ├──  endeavouros.png
+│   │   ├──  fedora.png
+│   │   ├──  find.efi.png
+│   │   ├──  find.none.png
+│   │   ├──  freebsd.png
+│   │   ├──  garuda.png
+│   │   ├──  gentoo.png
+│   │   ├──  gnu-linux.png
+│   │   ├──  haiku.png
+│   │   ├──  help.png
+│   │   ├──  kali.png
+│   │   ├──  kaos.png
+│   │   ├──  kbd.png
+│   │   ├──  korora.png
+│   │   ├──  kubuntu.png
+│   │   ├──  lang.png
+│   │   ├──  lfs.png
+│   │   ├──  linux.png
+│   │   ├──  linuxlite.png
+│   │   ├──  linuxmint.png
+│   │   ├──  lubuntu.png
+│   │   ├──  macosx.png
+│   │   ├──  mageia.png
+│   │   ├──  Manjaro.i686.png
+│   │   ├──  manjaro.png
+│   │   ├──  Manjaro.x86_64.png
+│   │   ├──  mate.png
+│   │   ├──  memtest.png
+│   │   ├──  mx-linux.png
+│   │   ├──  neon.png
+│   │   ├──  nix.png
+│   │   ├──  nixos.png
+│   │   ├──  nobara.png
+│   │   ├──  opensuse.png
+│   │   ├──  parabola.png
+│   │   ├──  parrot.png
+│   │   ├──  pop-os.png
+│   │   ├──  pop.png
+│   │   ├──  recovery.png
+│   │   ├──  regolith.png
+│   │   ├──  restart.png
+│   │   ├──  rocky.png
+│   │   ├──  shutdown.png
+│   │   ├──  siduction.png
+│   │   ├──  silverblue.png
+│   │   ├──  slackware.png
+│   │   ├──  solus.png
+│   │   ├──  steamos.png
+│   │   ├──  SystemRescueCD.png
+│   │   ├──  type.png
+│   │   ├──  tz.png
+│   │   ├──  ubuntu.png
+│   │   ├──  ultramarine.png
+│   │   ├──  unknown.png
+│   │   ├──  unset.png
+│   │   ├──  vanillaos.png
+│   │   ├──  ventoy.png
+│   │   ├──  void.png
+│   │   ├──  windows.png
+│   │   ├──  windows11.png
+│   │   ├──  xero.png
+│   │   ├──  xerolinux.png
+│   │   ├──  xubuntu.png
+│   │   └──  zorin.png
+│   ├──  menu
+│   │   ├──  select_c.png
+│   │   ├──  select_e.png
+│   │   ├──  select_w.png
+│   │   ├──  terminal_box_c.png
+│   │   ├──  terminal_box_e.png
+│   │   ├──  terminal_box_n.png
+│   │   ├──  terminal_box_ne.png
+│   │   ├──  terminal_box_nw.png
+│   │   ├──  terminal_box_s.png
+│   │   ├──  terminal_box_se.png
+│   │   ├──  terminal_box_sw.png
+│   │   └──  terminal_box_w.png
+│   ├──  splash_image.jpg
+│   └──  theme.txt
+├── 󱧼 build
+│   ├──  default.nix
+│   └──  module.nix
+├──  docs
+│   ├──  Contributing.mdx
+│   ├──  Index.mdx
+│   └──  Installation.mdx
+├──  preview
+│   ├──  acer.png
+│   ├──  almalinux.png
+│   ├──  aorus.png
+│   ├──  apple.png
+│   ├──  arch-linux.png
+│   ├──  archcraft.png
+│   ├──  arco-linux.png
+│   ├──  artix-linux.png
+│   ├──  asrock.png
+│   ├──  asus-rog.png
+│   ├──  asus-tuf.png
+│   ├──  asus.png
+│   ├──  bedrock-linux.png
+│   ├──  centos.png
+│   ├──  chromeos.png
+│   ├──  debian.png
+│   ├──  deepin.png
+│   ├──  dell.png
+│   ├──  elementaryos.png
+│   ├──  endeavouros.png
+│   ├──  fedora.png
+│   ├──  framework.png
+│   ├──  framework13.png
+│   ├──  freebsd.png
+│   ├──  fujitsu.png
+│   ├──  garuda.png
+│   ├──  gentoo.png
+│   ├──  gigabyte.png
+│   ├──  hp-victus.png
+│   ├──  hp.png
+│   ├──  huawei.png
+│   ├──  kde-neon.png
+│   ├──  kingston.png
+│   ├──  kubuntu.png
+│   ├──  legion.png
+│   ├──  lenovo.png
+│   ├──  lg.png
+│   ├──  linux-lite.png
+│   ├──  linux-mint.png
+│   ├──  lubuntu.png
+│   ├──  manjaro.png
+│   ├──  medion.png
+│   ├──  msi.png
+│   ├──  mx-linux.png
+│   ├──  nixos.png
+│   ├──  nobara.png
+│   ├──  opensuse.png
+│   ├──  parabola.png
+│   ├──  pop-os.png
+│   ├──  proxmox.png
+│   ├──  razer.png
+│   ├──  rocky-linux.png
+│   ├──  samsung.png
+│   ├──  slackware.png
+│   ├──  solus.png
+│   ├──  supermicro.png
+│   ├──  system76.png
+│   ├──  thinkpad.png
+│   ├──  toshiba.png
+│   ├──  ubuntu-mate.png
+│   ├──  ubuntu.png
+│   ├──  ultramarine.png
+│   ├──  vaio.png
+│   ├──  vanilla-os.png
+│   ├──  ventoy.png
+│   ├──  void-linux.png
+│   ├──  windows-10.png
+│   ├──  windows-11.png
+│   ├──  xero-linux.png
+│   └──  zorin-os.png
+├──  themes
+│   ├──  acer.tar
+│   ├──  almalinux.tar
+│   ├──  aorus.tar
+│   ├──  apple.tar
+│   ├──  arch-linux.tar
+│   ├──  archcraft.tar
+│   ├──  arco-linux.tar
+│   ├──  artix-linux.tar
+│   ├──  asrock.tar
+│   ├──  asus-rog.tar
+│   ├──  asus-tuf.tar
+│   ├──  asus.tar
+│   ├──  bedrock-linux.tar
+│   ├──  centos.tar
+│   ├──  chromeos.tar
+│   ├──  debian.tar
+│   ├──  deepin.tar
+│   ├──  dell.tar
+│   ├──  elementaryos.tar
+│   ├──  endeavouros.tar
+│   ├──  fedora.tar
+│   ├──  framework.tar
+│   ├──  framework13.tar
+│   ├──  freebsd.tar
+│   ├──  fujitsu.tar
+│   ├──  garuda.tar
+│   ├──  gentoo.tar
+│   ├──  gigabyte.tar
+│   ├──  hp-omen.tar
+│   ├──  hp-victus.tar
+│   ├──  hp.tar
+│   ├──  huawei.tar
+│   ├──  kde-neon.tar
+│   ├──  kingston.tar
+│   ├──  kubuntu.tar
+│   ├──  legion.tar
+│   ├──  lenovo.tar
+│   ├──  lg.tar
+│   ├──  linux-lite.tar
+│   ├──  linux-mint.tar
+│   ├──  lubuntu.tar
+│   ├──  manjaro.tar
+│   ├──  medion.tar
+│   ├──  msi.tar
+│   ├──  mx-linux.tar
+│   ├──  nixos.tar
+│   ├──  nobara.tar
+│   ├──  opensuse.tar
+│   ├──  parabola.tar
+│   ├──  pop-os.tar
+│   ├──  proxmox.tar
+│   ├──  razer.tar
+│   ├──  rocky-linux.tar
+│   ├──  samsung.tar
+│   ├──  slackware.tar
+│   ├──  solus.tar
+│   ├──  supermicro.tar
+│   ├──  system76.tar
+│   ├──  thinkpad.tar
+│   ├──  toshiba.tar
+│   ├──  ubuntu-mate.tar
+│   ├──  ubuntu.tar
+│   ├──  ultramarine.tar
+│   ├──  vaio.tar
+│   ├──  vanilla-os.tar
+│   ├──  ventoy.tar
+│   ├──  void-linux.tar
+│   ├──  windows-10.tar
+│   ├──  windows-11.tar
+│   ├──  xero-linux.tar
+│   └──  zorin-os.tar
+├── 󰊢 .gitattributes
+├── 󰊢 .gitignore
+├──  CONTRIBUTING.md
+├──  flake.lock
+├──  flake.nix
+├──  LICENSE
+├── 󰡯 merge-project
+├── 󰂺 README.md
+└──  themes.json
